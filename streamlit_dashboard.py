@@ -2,10 +2,26 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
+import os
 from config import stdev_hot_treshold, stdev_very_successful_treshold
 
-df = pd.read_csv('raw_data/described_data.csv')
-df = df.sort_values(by='timestamp', ascending=False)
+# Try to load data file, fallback to sample data if not found
+try:
+    if os.path.exists('raw_data/described_data.csv'):
+        df = pd.read_csv('raw_data/described_data.csv')
+    else:
+        df = pd.read_csv('raw_data/sample_data.csv')
+        st.warning("⚠️ Используются демонстрационные данные. Для полной функциональности загрузите файл described_data.csv")
+except FileNotFoundError:
+    st.error("❌ Файл данных не найден. Убедитесь, что файл raw_data/sample_data.csv существует.")
+    st.stop()
+
+# Ensure df is a DataFrame and sort by timestamp
+if isinstance(df, pd.DataFrame):
+    df = df.sort_values(by='timestamp', ascending=False)
+else:
+    st.error("❌ Ошибка загрузки данных. Данные не являются DataFrame.")
+    st.stop()
 
 selected_account = st.selectbox("Выбери аккаунт", df['accountName'].unique())
 filtered_df = df[df['accountName'] == selected_account]

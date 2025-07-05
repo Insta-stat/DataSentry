@@ -126,10 +126,10 @@ Thumbs.db
 # Project specific
 temp_audio/
 creds/
-raw_data/
 input_data/
 transcripts/
 *.csv
+!raw_data/sample_data.csv
 *.json
 *.txt
 !requirements*.txt
