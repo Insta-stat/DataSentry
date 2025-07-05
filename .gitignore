@@ -130,6 +130,7 @@ input_data/
 transcripts/
 *.csv
 !raw_data/sample_data.csv
+!raw_data/described_data.csv
 *.json
 *.txt
 !requirements*.txt
