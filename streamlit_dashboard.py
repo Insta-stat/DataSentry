@@ -634,13 +634,18 @@ with tab2:
         st.subheader("Фильтры видео")
         
         # Определяем какой mark-параметр использовать в зависимости от выбранной метрики
-        mark_mapping = {
-            'likesCount': 'markLikes',
-            'commentsCount': 'markComments', 
-            'videoPlayCount': 'markPlay'
+        mark_columns = {
+            'commentsCount': 'markcomments',
+            'likesCount': 'marklikes',
+            'videoPlayCount': 'markvideoPlay',
+            'videoDuration': 'markvideoDuration',
+            'engagementRate': 'markengagementR',
+            'commentRate': 'markcommentR',
+            'likeRate': 'marklikeR',
+            'performanceScore': 'markperformanceScore'
         }
         
-        mark_column = mark_mapping[selected_metric]
+        mark_column = mark_columns[selected_metric]
         
         # Получаем все возможные значения категорий
         category_options = ['🔥viral hit', '✅very successful', 'successful', 'average', 'weak']
