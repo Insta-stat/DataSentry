@@ -2,6 +2,10 @@ import pandas as pd
 import os
 import numpy as np
 from scipy.stats import zscore
+import sys
+
+# Добавляем родительскую директорию в sys.path для импорта config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from config import z_categorize
 
 pd.set_option('display.float_format', '{:.3f}'.format)

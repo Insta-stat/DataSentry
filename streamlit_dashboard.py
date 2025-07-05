@@ -3,7 +3,79 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 import os
-from config import stdev_hot_treshold, stdev_very_successful_treshold
+import subprocess
+from config import stdev_hot_treshold, stdev_very_successful_treshold, reels_input_data, update_accounts
+
+st.write("### 📊 Настройка анализа")
+
+# Поле для ввода аккаунтов
+default_accounts = ",".join(reels_input_data["username"])
+accounts_input = st.text_input(
+    "Введите аккаунты для анализа (через запятую)",
+    value=default_accounts,
+    help="Например: account1,account2,account3"
+)
+
+# Ползунок для выбора количества постов
+posts_limit = st.slider(
+    "Количество последних постов для анализа",
+    min_value=1,
+    max_value=500,
+    value=reels_input_data["resultsLimit"],
+    help="Выберите количество последних постов, которые будут проанализированы для каждого аккаунта"
+)
+
+# Кнопка для применения настроек
+if st.button("🚀 Применить и запустить анализ", help="Обновить настройки и запустить сбор данных"):
+    if accounts_input:
+        # Разбиваем строку на список аккаунтов и убираем пробелы
+        accounts_list = [acc.strip() for acc in accounts_input.split(",") if acc.strip()]
+        
+        # Показываем информацию о настройках
+        st.write("🎯 Аккаунты для анализа:", ", ".join(accounts_list))
+        st.write("📊 Количество постов для анализа:", posts_limit)
+        
+        # Обновляем конфигурацию
+        update_accounts(accounts_list, posts_limit)
+        
+        # Создаем placeholder для сообщения о загрузке
+        loading_placeholder = st.empty()
+        loading_placeholder.info(f"⏳ Запускаем анализ {len(accounts_list)} аккаунтов (по {posts_limit} последних постов)...")
+        
+        try:
+            # Запускаем скраппер
+            result = subprocess.run(["python", "inst_reel_scraper.py"], 
+                                 check=True, 
+                                 capture_output=True, 
+                                 text=True)
+            
+            # Запускаем обработку данных
+            loading_placeholder.info("⏳ Обрабатываем полученные данные...")
+            stat_result = subprocess.run(["python", "external_analysis/descriptive_stat.py"],
+                                      check=True,
+                                      capture_output=True,
+                                      text=True)
+            
+            # Очищаем сообщение о загрузке
+            loading_placeholder.empty()
+            st.success("✅ Анализ успешно завершен!")
+            
+            # Перезагружаем страницу для отображения новых данных
+            st.rerun()
+            
+        except subprocess.CalledProcessError as e:
+            # Очищаем сообщение о загрузке
+            loading_placeholder.empty()
+            error_output = e.stderr if e.stderr else str(e)
+            if "Monthly usage hard limit exceeded" in error_output:
+                st.error("❌ Превышен месячный лимит использования API Apify. " +
+                        "Пожалуйста, дождитесь следующего месяца или обновите план подписки.")
+            else:
+                st.error(f"❌ Ошибка при запуске анализа: {error_output}")
+    else:
+        st.error("❌ Введите хотя бы один аккаунт для анализа")
+
+st.divider()
 
 # Try to load data file, fallback to sample data if not found
 try:
@@ -23,7 +95,12 @@ else:
     st.error("❌ Ошибка загрузки данных. Данные не являются DataFrame.")
     st.stop()
 
-selected_account = st.selectbox("Выбери аккаунт", df['accountName'].unique())
+# Выбор аккаунта для просмотра статистики
+selected_account = st.selectbox(
+    "Выберите аккаунт для просмотра статистики",
+    options=df['accountName'].unique(),
+    help="Выберите аккаунт, для которого хотите посмотреть подробную статистику"
+)
 filtered_df = df[df['accountName'] == selected_account]
 st.divider()
 
