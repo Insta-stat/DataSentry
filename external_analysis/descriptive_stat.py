@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 import numpy as np
-from scipy.stats import zscore
 import sys
 import json
 
@@ -18,6 +17,16 @@ pd.set_option('display.expand_frame_repr', False)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DATA_PATH = os.path.join(BASE_DIR, "raw_data", "reels.csv")
 OUTPUT_PATH = os.path.join(BASE_DIR, "raw_data", "described_data.csv")
+
+# Lightweight z-score implementation (replace SciPy dependency)
+def simple_zscore(series: pd.Series) -> pd.Series:
+    """Return z-scores for a numeric pandas Series. NaNs are preserved."""
+    mean = series.mean(skipna=True)
+    std = series.std(ddof=0, skipna=True)
+    if std == 0 or np.isnan(std):
+        # Avoid division by zero – return zeros or NaNs accordingly
+        return pd.Series([0 if not np.isnan(v) else np.nan for v in series], index=series.index)
+    return (series - mean) / std
 
 def process_data():
     try:
@@ -50,7 +59,7 @@ def process_data():
         
         for metric in metrics:
             z_col = f'z{metric}'
-            processed_df[z_col] = zscore(processed_df[metric], nan_policy='omit')
+            processed_df[z_col] = simple_zscore(processed_df[metric])
             mark_col = f'mark{metric.replace("Count", "").replace("Rate", "R")}'
             processed_df[mark_col] = processed_df[z_col].apply(z_categorize)
         
