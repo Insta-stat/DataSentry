@@ -79,20 +79,37 @@ st.divider()
 
 # Try to load data file, fallback to sample data if not found
 try:
-    if os.path.exists('raw_data/described_data.csv'):
-        df = pd.read_csv('raw_data/described_data.csv')
+    described_path = 'raw_data/described_data.csv'
+    sample_path = 'raw_data/sample_data.csv'
+
+    # Попытка автоматически сгенерировать described_data.csv, если он отсутствует
+    if not os.path.exists(described_path):
+        reels_csv_path = 'raw_data/reels.csv'
+        if os.path.exists(reels_csv_path):
+            try:
+                # Генерируем файл статистики на лету
+                from external_analysis.descriptive_stat import process_data
+                process_data()
+            except Exception as e:
+                st.warning(f"Не удалось сгенерировать described_data.csv автоматически: {e}")
+
+    # После возможной генерации повторно проверяем наличие файла
+    if os.path.exists(described_path):
+        df = pd.read_csv(described_path)
+    elif os.path.exists(sample_path):
+        df = pd.read_csv(sample_path)
+        st.warning("⚠️ Используются демонстрационные данные, так как described_data.csv не найден")
     else:
-        df = pd.read_csv('raw_data/sample_data.csv')
-        st.warning("⚠️ Используются демонстрационные данные. Для полной функциональности загрузите файл described_data.csv")
+        raise FileNotFoundError("Отсутствуют как described_data.csv, так и sample_data.csv")
+
+    # Ensure df is a DataFrame and sort by timestamp
+    if isinstance(df, pd.DataFrame):
+        df = df.sort_values(by='timestamp', ascending=False)
+    else:
+        st.error("❌ Ошибка загрузки данных. Данные не являются DataFrame.")
+        st.stop()
 except FileNotFoundError:
     st.error("❌ Файл данных не найден. Убедитесь, что файл raw_data/sample_data.csv существует.")
-    st.stop()
-
-# Ensure df is a DataFrame and sort by timestamp
-if isinstance(df, pd.DataFrame):
-    df = df.sort_values(by='timestamp', ascending=False)
-else:
-    st.error("❌ Ошибка загрузки данных. Данные не являются DataFrame.")
     st.stop()
 
 # Выбор аккаунта для просмотра статистики
