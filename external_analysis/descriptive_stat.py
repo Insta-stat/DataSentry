@@ -25,24 +25,24 @@ def process_data():
         df = pd.read_csv(DATA_PATH)
         
         # Extract required fields
-        df['accountName'] = df['ownerUsername']
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
-        df['videoPlayCount'] = pd.to_numeric(df['videoPlayCount'], errors='coerce')
-        df['likesCount'] = pd.to_numeric(df['likesCount'], errors='coerce')
-        df['commentsCount'] = pd.to_numeric(df['commentsCount'], errors='coerce')
-        df['videoDuration'] = pd.to_numeric(df['videoDuration'], errors='coerce')
+        processed_df = pd.DataFrame()
+        processed_df['accountName'] = df['ownerUsername']
+        processed_df['timestamp'] = pd.to_datetime(df['timestamp'])
+        processed_df['videoPlayCount'] = pd.to_numeric(df['videoPlayCount'], errors='coerce').fillna(0)
+        processed_df['likesCount'] = pd.to_numeric(df['likesCount'], errors='coerce').fillna(0)
+        processed_df['commentsCount'] = pd.to_numeric(df['commentsCount'], errors='coerce').fillna(0)
+        processed_df['caption'] = df['caption']
+        processed_df['url'] = df['url']
+        processed_df['videoDuration'] = pd.to_numeric(df['videoDuration'], errors='coerce').fillna(0)
         
         # Calculate engagement metrics
-        df['engagementRate'] = (df['likesCount'] + df['commentsCount']) / df['videoPlayCount']
-        df['commentRate'] = df['commentsCount'] / df['videoPlayCount']
-        df['likeRate'] = df['likesCount'] / df['videoPlayCount']
-        df['likeCommentRate'] = df['likesCount'] / (df['commentsCount'] + 1)  # Add 1 to avoid division by zero
-        df['viralityIndex'] = df['videoPlayCount'] / (df['likesCount'] + df['commentsCount'] + 1)
-        df['performanceScore'] = (df['engagementRate'] + df['commentRate'] + df['likeRate']) / 3
-        
-        # Replace inf and nan with 0
-        df = df.replace([np.inf, -np.inf], 0)
-        df = df.fillna(0)
+        total_followers = 10000  # Default value for demo
+        processed_df['engagementRate'] = (processed_df['likesCount'] + processed_df['commentsCount']) / total_followers
+        processed_df['commentRate'] = processed_df['commentsCount'] / total_followers
+        processed_df['likeRate'] = processed_df['likesCount'] / total_followers
+        processed_df['likeCommentRate'] = processed_df['likesCount'] / np.where(processed_df['commentsCount'] > 0, processed_df['commentsCount'], 1)
+        processed_df['viralityIndex'] = processed_df['videoPlayCount'] / total_followers
+        processed_df['performanceScore'] = (processed_df['engagementRate'] + processed_df['viralityIndex']) / 2
         
         # Calculate z-scores
         metrics = ['commentsCount', 'likesCount', 'videoPlayCount', 'videoDuration', 
@@ -50,11 +50,12 @@ def process_data():
         
         for metric in metrics:
             z_col = f'z{metric}'
-            df[z_col] = zscore(df[metric], nan_policy='omit')
-            df[f'mark{metric.replace("Count", "").replace("Rate", "R").replace("Score", "S")}'] = df[z_col].apply(z_categorize)
-            
+            processed_df[z_col] = zscore(processed_df[metric], nan_policy='omit')
+            mark_col = f'mark{metric.replace("Count", "").replace("Rate", "R")}'
+            processed_df[mark_col] = processed_df[z_col].apply(z_categorize)
+        
         # Save processed data
-        df.to_csv(OUTPUT_PATH, index=False)
+        processed_df.to_csv(OUTPUT_PATH, index=False)
         print(f"Data processed successfully and saved to {OUTPUT_PATH}")
         
     except Exception as e:
