@@ -63,6 +63,6 @@ df['markCR'] = df['zCommentRate'].apply(z_categorize)
 df['markLR'] = df['zLikeRate'].apply(z_categorize)
 df['markPS'] = df['zPerformanceScore'].apply(z_categorize)
 
-df.to_csv('../raw_data/described_data.csv', index=False)
+df.to_csv(os.path.join(BASE_DIR, 'raw_data', 'described_data.csv'), index=False)
 print(df.head())
 

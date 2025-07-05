@@ -1,0 +1,18 @@
+# Example environment variables for DataSentry
+# Copy this file to creds/.env and fill in your actual values
+
+# OpenAI API Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Apify API Configuration (for Instagram scraping)
+APIFY_API=your_apify_api_key_here
+
+# Google Sheets Configuration
+# Place your Google service account JSON file in creds/ directory
+# The file should be named: content-analysis-463207-aee6a542c2b9.json
+
+# Optional: Database Configuration
+# DATABASE_URL=your_database_url_here
+
+# Optional: Other API keys
+# INSTAGRAM_API_KEY=your_instagram_api_key_here 

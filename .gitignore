@@ -134,6 +134,7 @@ transcripts/
 *.txt
 !requirements*.txt
 !README*.txt
+!env_example.txt
 !*.md
 
 # Temporary files
